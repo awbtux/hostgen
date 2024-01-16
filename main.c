@@ -2,7 +2,12 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <unistd.h>
 #include <time.h>
+#include <sys/time.h>
+
+/* char arrays */
+char winhostname[16];
 
 /* generate a random ASCII character */
 char get_rndchar(void) {
@@ -17,30 +22,27 @@ char get_rndchar(void) {
     }
 }
 
-/* windows function */
-char *name_windows(void) {
-    /* char arrays */
-    char winrand[8], winfull[16];
+/* DESKTOP-XXXXXXX */
+void gen_windows(char *win_rand) {
+    /* copy the DESKTOP- prefix */
+    strcpy(win_rand, "DESKTOP-");
 
-    /* populate the random string */
-    for (i = 0; i < 7; i++) {
-        winrand[i] = get_rndchar();
+    /* populate the random part of the string */
+    for (int i = 0; i < 7; i++) {
+        win_rand[i + 8] = get_rndchar();
     }
-    winrand[7] = '\0';
-
-    /* place the entire new hostname in winfull */
-    strcpy(winfull, "DESKTOP-");
-    strcat(winfull, winrand);
-
-    /* return this value */
-    return winfull;
+    win_rand[15] = '\0';
 }
 
 /* main function yaaaaay les go */
 int main(int argc, char *argv[]) {
-    /* seed the random number generator with system time (GENERALLY INSECURE) */
-    srand(time(NULL));
+    /* seed the random number generator with a few entropy sources
+     * not at all cryptographically secure but it's good enough here */
+    srand((clock() ^ getpgrp() ^ getpid() ^ geteuid() ^ getegid() ^ getuid() ^ getgid() ^ getppid()));
 
-    printf("%s\n", name_windows());
+    /* generate a windows hostname */
+    gen_windows(winhostname);
+
+    printf("%s\n", winhostname);
     return 0;
 }
