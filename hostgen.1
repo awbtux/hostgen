@@ -1,0 +1,40 @@
+.TH HOSTGEN 8 "15 January 2024" "Antares Linux"
+.SH NAME
+hostgen - generate randomized system hostnames mimicking various platforms
+.SH SYNOPSIS
+.B hostgen
+[\fIOPTIONS\fR]...
+.SH OPTIONS
+.TP
+\fB\-a, \-\-append\fR
+Append output to the destination file rather than overwriting it.
+.TP
+\fB\-f, \-\-format\fR=\fI\,FORMAT\/\fR
+Specify the output format for the generated hostname. The following formats are supported:
+.TP
+\fB\-o, \-\-output\fR=\fI\,FILE\/\fR
+Specify which file to overwrite/append the generated hostname to instead of stdout.
+.TP
+\fB\-p, \-\-platform\fR=\fI\,PLATFORM\/\fR
+Pick a hostname resembling a default for \fIPLATFORM\fR. See
+.B SUPPORTED PLATFORMS
+for more information.
+.SH SUPPORTED PLATFORMS
+.TP
+.B windows
+.TP
+.B windows7
+Alias to \fBwindows\fR.
+.TP
+.B windows8
+Alias to \fBwindows\fR.
+.TP
+.B windows10
+Alias to \fBwindows\fR.
+.TP
+.B windows11
+Alias to \fBwindows\fR.
+.SH AUTHORS
+Written by Andrew Blue.
+.SH SEE ALSO
+\fBmacchanger\fR(1)
