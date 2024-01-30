@@ -21,15 +21,17 @@ Pick a hostname resembling a default for \fIPLATFORM\fR. See
 for more information.
 .SH SUPPORTED PLATFORMS
 .TP
+.B mac\fR, \fBmacos\fR, \fBosx\fR
+Alias to either \fImacbook\fR or \fImacmini\fR, random at runtime.
+.TP
 .B macbook
+Generate a hostname like \fI[Name]s-Macbook-[Product]\fR, where \fI'Name'\fR represents a random first name and \fI'Product'\fR is either \fIAir\fR or \fIPro\fR.
 .TP
-.B macos
-alias to \fBmacbook\fR.
-.TP
-.B osx
-alias to \fBmacbook\fR.
+.B macmini
+Generate a hostname like \fI[Name]s-Mac-Mini\fR, where \fI'Name'\fR represents a random first name.
 .TP
 .B windows
+Generate a hostname like \fI'DESKTOP-XXXXXXX'\fR, where each \fIX\fR represents a random alphanumeric character.
 .TP
 .B windows7
 Alias to \fBwindows\fR.

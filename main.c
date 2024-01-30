@@ -50,7 +50,7 @@ void hostname_windows(char *format_prefix, char *format_suffix) {
     printf("%s%s%s%s\n", format_prefix, "DESKTOP-", win_rand, format_suffix);
 }
 
-// print a hostname like NAMEs-Macbook-[Air|Pro]: format_prefix is printed before, format_suffix is printed after
+// print a hostname like [Name]s-Macbook-[Air|Pro]
 void hostname_macbook(char *format_prefix, char *format_suffix) {
     // type of macbook
     char mac_type[3];
@@ -62,6 +62,12 @@ void hostname_macbook(char *format_prefix, char *format_suffix) {
     printf("%s%ss-Macbook-%s%s\n", format_prefix, get_random_name(), mac_type, format_suffix);
 }
 
+// print a hostname like [Name]s-Mac-Mini
+void hostname_macmini(char *format_prefix, char *format_suffix) {
+    // print the hostname
+    printf("%s%ss-Mac-Mini%s\n", format_prefix, get_random_name(), format_suffix);
+}
+
 // main
 int main(int argc, char *argv[]) {
     // seed the random number generator with a few entropy sources
@@ -71,6 +77,7 @@ int main(int argc, char *argv[]) {
     // option parsing/output redirection/etc is yet to be done; for now, just print hostnames
     hostname_windows("", "");
     hostname_macbook("", "");
+    hostname_macmini("", "");
 
     return 0;
 }
