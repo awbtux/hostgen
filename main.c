@@ -14,16 +14,8 @@
 // preproc macros for version info for now, no build system yet
 #define HOSTGEN_VERSION "v0.3a"
 
-// file-scope char pointer to argv[0]
-char *program_name;
-
-// function declarations
-void hostname_windows(FILE *fd, char *prefix, char *suffix);
-void hostname_macbook(FILE *fd, char *prefix, char *suffix);
-void hostname_macmini(FILE *fd, char *prefix, char *suffix);
-FILE *prepare_file(char *path);
-char get_random_char(bool is_ucase);
-const char *get_random_name(void);
+// char arrays
+char *program_name, *option_output_file, *option_prefix = "", *option_suffix = "";
 
 // platform type enum
 enum EPlatformType {
@@ -32,6 +24,76 @@ enum EPlatformType {
     MACBOOK = 2,
     MACMINI = 3,
 };
+
+// command line options
+static struct option long_options[] = {
+    {"output", required_argument, 0, 'o'},
+    {"platform", required_argument, 0, 'p'},
+    {"prefix", required_argument, 0, 'P'},
+    {"suffix", required_argument, 0, 's'},
+    {"help", no_argument, 0, 'h'},
+    {"version", no_argument, 0, 'v'},
+    {0, 0, 0, 0}
+};
+
+// display a help message
+void display_help_message(void) {
+    printf("Usage: %s [OPTIONS]...\n"
+           "Generate randomized system hostnames mimicking various platforms.\n"
+           "\n"
+           "Options:\n"
+           "  -h, --help                display this message\n"
+           "  -o, --output=FILE         write the new hostname to FILE instead of stdout\n"
+           "  -p, --platform=PLATFORM   make the hostname emulate the default for PLATFORM\n"
+           "  -P, --prefix=PREFIX       prepend PREFIX to the hostname string\n"
+           "  -s, --suffix=SUFFIX       append SUFFIX to the hostname string\n"
+           "  -v, --version             display version information\n"
+           "\n"
+           "Platforms:\n"
+           "  mac           Alias to either macbook or macmini, random at runtime\n"
+           "  macbook       [Name]s-Macbook-[Prod]; 'Name' is random, 'Prod' is Air or Pro\n"
+           "  macmini       [Name]s-Mac-Mini; 'Name' is random\n"
+           "  macos         Alias to either macbook or macmini, random at runtime\n"
+           "  osx           Alias to either macbook or macmini, random at runtime\n"
+           "  windows       DESKTOP-[XXXXXXX]; 'X' are random, capital alphanumeric chars\n"
+           "  win7          Alias to windows\n"
+           "  win8          Alias to windows\n"
+           "  win10         Alias to windows\n"
+           "  win11         Alias to windows\n"
+           , program_name);
+    exit(0);
+}
+
+// display a version message
+void display_version_message(void) {
+    printf("hostgen %s\n", HOSTGEN_VERSION);
+    exit(0);
+}
+
+// generate a random ASCII number/uppercase character
+char get_random_char(bool is_ucase) {
+    // get the random number
+    unsigned int rnum = rand() % 36;
+
+    // return it
+    if (rnum < 10)
+        return '0' + rnum;
+
+    // return an upper- or lowercase letter
+    return (is_ucase == true ? ('A' + (rnum - 10)) : ('a' + (rnum - 10)));
+}
+
+// pick a random name from the first_names[] array
+const char *get_random_name(void) {
+    // store the amount of names in the array
+    unsigned int name_ct = sizeof(first_names) / sizeof(first_names[0]);
+
+    // get a random position in the index
+    unsigned int name_index = rand() % (name_ct - 1);
+
+    // return it
+    return first_names[name_index];
+}
 
 // print a hostname like DESKTOP-XXXXXXX: format_prefix is printed before, format_suffix is printed after
 void hostname_windows(FILE *hostname_fd, char *format_prefix, char *format_suffix) {
@@ -65,31 +127,6 @@ void hostname_macmini(FILE *hostname_fd, char *format_prefix, char *format_suffi
     fprintf(hostname_fd, "%s%ss-Mac-Mini%s\n", format_prefix, get_random_name(), format_suffix);
 }
 
-// generate a random ASCII number/uppercase character
-char get_random_char(bool is_ucase) {
-    // get the random number
-    unsigned int rnum = rand() % 36;
-
-    // return it
-    if (rnum < 10)
-        return '0' + rnum;
-
-    // return an upper- or lowercase letter
-    return (is_ucase == true ? ('A' + (rnum - 10)) : ('a' + (rnum - 10)));
-}
-
-// pick a random name from the first_names[] array
-const char *get_random_name(void) {
-    // store the amount of names in the array
-    unsigned int name_ct = sizeof(first_names) / sizeof(first_names[0]);
-
-    // get a random position in the index
-    unsigned int name_index = rand() % (name_ct - 1);
-
-    // return it
-    return first_names[name_index];
-}
-
 // perform some checks and initialize a file descriptor
 FILE *prepare_file(char *file_path) {
     // try to open the file for writing/creating
@@ -107,54 +144,6 @@ FILE *prepare_file(char *file_path) {
     // return the file descriptor
     return fopen(file_path, "w+");
 }
-
-// display a version message
-void display_version_message(void) {
-    printf("hostgen %s\n", HOSTGEN_VERSION);
-    exit(0);
-}
-
-// display a help message
-void display_help_message(void) {
-    printf("Usage: %s [OPTIONS]...\n"
-           "Generate randomized system hostnames mimicking various platforms.\n"
-           "\n"
-           "Options:\n"
-           "  -h, --help                display this message\n"
-           "  -o, --output=FILE         write the new hostname to FILE instead of stdout\n"
-           "  -p, --platform=PLATFORM   make the hostname emulate the default for PLATFORM\n"
-           "  -P, --prefix=PREFIX       prepend PREFIX to the hostname string\n"
-           "  -s, --suffix=SUFFIX       append SUFFIX to the hostname string\n"
-           "  -v, --version             display version information\n"
-           "\n"
-           "Platforms:\n"
-           "  mac           Alias to either macbook or macmini, random at runtime\n"
-           "  macbook       [Name]s-Macbook-[Prod]; 'Name' is random, 'Prod' is Air or Pro\n"
-           "  macmini       [Name]s-Mac-Mini; 'Name' is random\n"
-           "  macos         Alias to either macbook or macmini, random at runtime\n"
-           "  osx           Alias to either macbook or macmini, random at runtime\n"
-           "  windows       DESKTOP-[XXXXXXX]; 'X' are random, capital alphanumeric chars\n"
-           "  win7          Alias to windows\n"
-           "  win8          Alias to windows\n"
-           "  win10         Alias to windows\n"
-           "  win11         Alias to windows\n"
-           , program_name);
-    exit(0);
-}
-
-// command line options
-static struct option long_options[] = {
-    {"output", required_argument, 0, 'o'},
-    {"platform", required_argument, 0, 'p'},
-    {"prefix", required_argument, 0, 'P'},
-    {"suffix", required_argument, 0, 's'},
-    {"help", no_argument, 0, 'h'},
-    {"version", no_argument, 0, 'v'},
-    {0, 0, 0, 0}
-};
-
-// char arrays for above options
-char *option_output_file, *option_prefix = "", *option_suffix = "";
 
 // main
 int main(int argc, char *argv[]) {
