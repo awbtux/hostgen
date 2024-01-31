@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
-#include <time.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <getopt.h>
@@ -17,6 +16,9 @@
 // char arrays
 char *program_name, *option_output_file, *option_prefix = "", *option_suffix = "";
 
+// affects fopen permissions in prepare_file()
+bool option_append_writes = false;
+
 // platform type enum
 enum EPlatformType {
     ANY = 0,
@@ -27,6 +29,7 @@ enum EPlatformType {
 
 // command line options
 static struct option long_options[] = {
+    {"append", no_argument, 0, 'a'},
     {"output", required_argument, 0, 'o'},
     {"platform", required_argument, 0, 'p'},
     {"prefix", required_argument, 0, 'P'},
@@ -42,6 +45,8 @@ void display_help_message(void) {
            "Generate randomized system hostnames mimicking various platforms.\n"
            "\n"
            "Options:\n"
+           "  -a, --append              append to FILE, instead of overwriting or trying\n"
+           "                            substitution in it\n"
            "  -h, --help                display this message\n"
            "  -o, --output=FILE         write the new hostname to FILE instead of stdout\n"
            "  -p, --platform=PLATFORM   make the hostname emulate the default for PLATFORM\n"
@@ -142,17 +147,29 @@ FILE *prepare_file(char *file_path) {
     close(fd);
 
     // return the file descriptor
-    return fopen(file_path, "w+");
+    return fopen(file_path, (option_append_writes == true ? "a+" : "w+"));
 }
 
 // main
 int main(int argc, char *argv[]) {
+    // seed for the random number generator
+    unsigned int random_seed;
+
     // make $0 usable in all functions
     program_name = argv[0];
 
-    // seed the random number generator with a few entropy sources
-    // not at all cryptographically secure but it's good enough here
-    srand((clock() ^ getpgrp() ^ getpid() ^ geteuid() ^ getegid() ^ getuid() ^ getgid() ^ getppid()));
+    // open /dev/urandom for reading
+    int random_file = open("/dev/urandom", O_RDONLY);
+
+    // print an error message and exit if the file can't be accessed
+    if (random_file == -1) {
+        fprintf(stderr, "%s: cannot read or create %s: %s\n", program_name, "/dev/urandom", strerror(errno));
+        exit(errno);
+    }
+
+    // seed the random number generator with entropy from /dev/urandom
+    read(random_file, &random_seed, sizeof(random_seed));
+    srand(random_seed);
 
     // current option, index
     int opt, option_index = 0;
@@ -161,8 +178,14 @@ int main(int argc, char *argv[]) {
     enum EPlatformType platform_type = ANY;
 
     // parse options
-    while ((opt = getopt_long(argc, argv, "hov:p:P:s:", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, argv, "aho:p:P:s:v", long_options, &option_index)) != -1) {
         switch (opt) {
+            case 'a':
+                option_append_writes = true;
+                break;
+            case 'h':
+                display_help_message();
+                break;
             case 'o':
                 option_output_file = strdup(optarg);
                 break;
@@ -196,9 +219,6 @@ int main(int argc, char *argv[]) {
             case 's':
                 option_suffix = strdup(optarg);
                 //printf("suffix: %s\n", optarg);
-                break;
-            case 'h':
-                display_help_message();
                 break;
             case 'v':
                 display_version_message();
