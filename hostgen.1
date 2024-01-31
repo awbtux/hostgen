@@ -6,9 +6,6 @@ hostgen - generate randomized system hostnames mimicking various platforms
 [\fIOPTIONS\fR]...
 .SH OPTIONS
 .TP
-\fB\-a, \-\-append\fR
-Append output to the destination file rather than overwriting it.
-.TP
 \fB\-f, \-\-format\fR=\fI\,FORMAT\/\fR
 Specify the output format for the generated hostname. The following formats are supported:
 .TP
@@ -17,6 +14,12 @@ Specify which file to overwrite/append the generated hostname to instead of stdo
 .TP
 \fB\-p, \-\-platform\fR=\fI\,PLATFORM\/\fR
 Pick a hostname resembling a default for \fIPLATFORM\fR. See
+.TP
+\fB\-P, \-\-prefix\fR=\fI\,PREFIX\/\fR
+Specify an arbitrary string to prepend to hostname(s).
+.TP
+\fB\-s, \-\-suffix\fR=\fI\,SUFFIX\/\fR
+Specify an arbitrary string to append to hostname(s).
 .B SUPPORTED PLATFORMS
 for more information.
 .SH SUPPORTED PLATFORMS
