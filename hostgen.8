@@ -1,4 +1,4 @@
-.TH HOSTGEN 8 "29 January 2024" "hostgen"
+.TH HOSTGEN 8 "31 January 2024" "hostgen v0.3a"
 .SH NAME
 hostgen - generate randomized system hostnames mimicking various platforms
 .SH SYNOPSIS
@@ -6,8 +6,8 @@ hostgen - generate randomized system hostnames mimicking various platforms
 [\fIOPTIONS\fR]...
 .SH OPTIONS
 .TP
-\fB\-f, \-\-format\fR=\fI\,FORMAT\/\fR
-Specify the output format for the generated hostname. The following formats are supported:
+\fB\-h, \-\-help\fR
+Print a help message displaying the available options and platforms.
 .TP
 \fB\-o, \-\-output\fR=\fI\,FILE\/\fR
 Specify which file to overwrite/append the generated hostname to instead of stdout.
@@ -20,6 +20,9 @@ Specify an arbitrary string to prepend to hostname(s).
 .TP
 \fB\-s, \-\-suffix\fR=\fI\,SUFFIX\/\fR
 Specify an arbitrary string to append to hostname(s).
+.TP
+\fB\-v, \-\-version\fR
+Print the version information.
 .B SUPPORTED PLATFORMS
 for more information.
 .SH SUPPORTED PLATFORMS
@@ -36,17 +39,18 @@ Generate a hostname like \fI[Name]s-Mac-Mini\fR, where \fI'Name'\fR represents a
 .B windows
 Generate a hostname like \fI'DESKTOP-XXXXXXX'\fR, where each \fIX\fR represents a random alphanumeric character.
 .TP
-.B windows7
+.B win7
 Alias to \fBwindows\fR.
 .TP
-.B windows8
+.B win8
 Alias to \fBwindows\fR.
 .TP
-.B windows10
+.B win10
 Alias to \fBwindows\fR.
 .TP
-.B windows11
+.B win11
 Alias to \fBwindows\fR.
+.SH EXAMPLES
 .SH AUTHORS
 Written by Andrew Blue.
 .SH SEE ALSO

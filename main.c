@@ -6,9 +6,13 @@
 #include <time.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <getopt.h>
 
 // long list of names in names.h
 #include "names.h"
+
+// preproc macros for version info for now, no build system yet
+#define HOSTGEN_VERSION "v0.3a"
 
 // file-scope char pointer to argv[0]
 char *program_name;
@@ -20,6 +24,14 @@ void hostname_macmini(FILE *fd, char *prefix, char *suffix);
 FILE *prepare_file(char *path);
 char get_random_char(bool is_ucase);
 const char *get_random_name(void);
+
+// platform type enum
+enum EPlatformType {
+    ANY = 0,
+    WINDOWS = 1,
+    MACBOOK = 2,
+    MACMINI = 3,
+};
 
 // print a hostname like DESKTOP-XXXXXXX: format_prefix is printed before, format_suffix is printed after
 void hostname_windows(FILE *hostname_fd, char *format_prefix, char *format_suffix) {
@@ -96,6 +108,54 @@ FILE *prepare_file(char *file_path) {
     return fopen(file_path, "w+");
 }
 
+// display a version message
+void display_version_message(void) {
+    printf("hostgen %s\n", HOSTGEN_VERSION);
+    exit(0);
+}
+
+// display a help message
+void display_help_message(void) {
+    printf("Usage: %s [OPTIONS]...\n"
+           "Generate randomized system hostnames mimicking various platforms.\n"
+           "\n"
+           "Options:\n"
+           "  -h, --help                display this message\n"
+           "  -o, --output=FILE         write the new hostname to FILE instead of stdout\n"
+           "  -p, --platform=PLATFORM   make the hostname emulate the default for PLATFORM\n"
+           "  -P, --prefix=PREFIX       prepend PREFIX to the hostname string\n"
+           "  -s, --suffix=SUFFIX       append SUFFIX to the hostname string\n"
+           "  -v, --version             display version information\n"
+           "\n"
+           "Platforms:\n"
+           "  mac           Alias to either macbook or macmini, random at runtime\n"
+           "  macbook       [Name]s-Macbook-[Prod]; 'Name' is random, 'Prod' is Air or Pro\n"
+           "  macmini       [Name]s-Mac-Mini; 'Name' is random\n"
+           "  macos         Alias to either macbook or macmini, random at runtime\n"
+           "  osx           Alias to either macbook or macmini, random at runtime\n"
+           "  windows       DESKTOP-[XXXXXXX]; 'X' are random, capital alphanumeric chars\n"
+           "  win7          Alias to windows\n"
+           "  win8          Alias to windows\n"
+           "  win10         Alias to windows\n"
+           "  win11         Alias to windows\n"
+           , program_name);
+    exit(0);
+}
+
+// command line options
+static struct option long_options[] = {
+    {"output", required_argument, 0, 'o'},
+    {"platform", required_argument, 0, 'p'},
+    {"prefix", required_argument, 0, 'P'},
+    {"suffix", required_argument, 0, 's'},
+    {"help", no_argument, 0, 'h'},
+    {"version", no_argument, 0, 'v'},
+    {0, 0, 0, 0}
+};
+
+// char arrays for above options
+char *option_output_file, *option_prefix = "", *option_suffix = "";
+
 // main
 int main(int argc, char *argv[]) {
     // make $0 usable in all functions
@@ -105,13 +165,89 @@ int main(int argc, char *argv[]) {
     // not at all cryptographically secure but it's good enough here
     srand((clock() ^ getpgrp() ^ getpid() ^ geteuid() ^ getegid() ^ getuid() ^ getgid() ^ getppid()));
 
-    // open the file descriptor
-    FILE *write_location = prepare_file("hostname.txt");
+    // current option, index
+    int opt, option_index = 0;
 
-    // option parsing/etc is yet to be done; for now, just print hostnames
-    hostname_windows(write_location, "", "");
-    hostname_macbook(write_location, "", "");
-    hostname_macmini(write_location, "", "");
+    // which platform to generate a hostname like
+    enum EPlatformType platform_type = ANY;
+
+    // parse options
+    while ((opt = getopt_long(argc, argv, "hov:p:P:s:", long_options, &option_index)) != -1) {
+        switch (opt) {
+            case 'o':
+                option_output_file = strdup(optarg);
+                break;
+            case 'p':
+                // spaghetti ☠️
+                if (strncmp(optarg, "mac", 4) == 0)
+                    platform_type = (rand() % 2) == 0 ? MACBOOK : MACMINI;
+                if (strncmp(optarg, "macos", 6) == 0)
+                    platform_type = (rand() % 2) == 0 ? MACBOOK : MACMINI;
+                if (strncmp(optarg, "osx", 4) == 0)
+                    platform_type = (rand() % 2) == 0 ? MACBOOK : MACMINI;
+                if (strncmp(optarg, "macbook", 4) == 0)
+                    platform_type = MACBOOK;
+                if (strncmp(optarg, "macmini", 4) == 0)
+                    platform_type = MACMINI;
+                if (strncmp(optarg, "windows", 8) == 0)
+                    platform_type = WINDOWS;
+                if (strncmp(optarg, "win7", 5) == 0)
+                    platform_type = WINDOWS;
+                if (strncmp(optarg, "win8", 5) == 0)
+                    platform_type = WINDOWS;
+                if (strncmp(optarg, "win10", 6) == 0)
+                    platform_type = WINDOWS;
+                if (strncmp(optarg, "win11", 6) == 0)
+                    platform_type = WINDOWS;
+                break;
+            case 'P':
+                option_prefix = strdup(optarg);
+                //printf("prefix: %s\n", optarg);
+                break;
+            case 's':
+                option_suffix = strdup(optarg);
+                //printf("suffix: %s\n", optarg);
+                break;
+            case 'h':
+                display_help_message();
+                break;
+            case 'v':
+                display_version_message();
+                break;
+            default:
+                // Handle other cases
+                break;
+        } // yeah I used strdup() without freeing memory, sue me 🙂
+    }
+
+    // open the chosen file or point to stdout
+    FILE *write_location = (option_output_file) ? prepare_file(option_output_file) : stdout;
+
+    // if the platform type is to be chosen by chance, do so
+    if (platform_type == ANY) {
+        // get a number
+        int platform_rng = rand() % 12;
+
+        // 33% chance to be macbook
+        if (platform_rng >= 0)
+            platform_type = MACBOOK;
+
+        // 16% chance to be mac mini
+        if (platform_rng >= 4)
+            platform_type = MACMINI;
+
+        // 50% chance to be windows
+        if (platform_rng >= 6)
+            platform_type = WINDOWS;
+    }
+
+    // run the specified hostname function
+    switch (platform_type) {
+        case MACBOOK: hostname_macbook(write_location, option_prefix, option_suffix); break;
+        case MACMINI: hostname_macmini(write_location, option_prefix, option_suffix); break;
+        case WINDOWS: hostname_windows(write_location, option_prefix, option_suffix); break;
+        default: break;
+    }
 
     // close the file descriptor
     fclose(write_location);
