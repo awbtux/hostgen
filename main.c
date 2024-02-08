@@ -15,7 +15,6 @@
 
 // file descriptors
 FILE *names_location,
-     *random_file,
      *write_location;
 
 // char arrays
@@ -31,10 +30,10 @@ bool option_append_writes = false;
 
 // platform type enum
 enum EPlatformType {
-    ANY = 0,
-    WINDOWS = 1,
-    MACBOOK = 2,
-    MACMINI = 3,
+    ANY,
+    WINDOWS,
+    MACBOOK,
+    MACMINI,
 };
 
 // command line options
@@ -114,7 +113,7 @@ int file_count_lines(FILE *file) {
 // get a random line from a file
 char *file_get_random_line(FILE *file) {
     // buffer holding the chosen line
-    char line_bfr[1024], *line = line_bfr;
+    char line_bfr[256], *line = line_bfr;
 
     // get the total number of lines in the file
     int lines = file_count_lines(file);
@@ -131,7 +130,7 @@ char *file_get_random_line(FILE *file) {
 
     // read and discard lines until the randomly chosen line
     for (int i = 1; i < random_line; i++) {
-        char bfr[1024];
+        char bfr[sizeof(line_bfr)];
         if (fgets(bfr, sizeof(bfr), file) == NULL) {
             fprintf(stderr, "%s: get_random_line(): error: %s\n", program_name, strerror(errno));
             exit(errno);
@@ -214,9 +213,8 @@ void hostname_windows(char *format_prefix, char *format_suffix) {
     char win_rand[8];
 
     // populate it
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < 7; i++)
         win_rand[i] = get_random_char(true);
-    }
 
     // print the hostname
     fprintf(write_location, "%s%s%s%s\n", format_prefix, "DESKTOP-", win_rand, format_suffix);
@@ -224,14 +222,8 @@ void hostname_windows(char *format_prefix, char *format_suffix) {
 
 // print a hostname like [Name]s-Macbook-[Air|Pro]
 void hostname_macbook(char *format_prefix, char *format_suffix) {
-    // type of macbook
-    char mac_type[3];
-
-    // decide between Air/Pro
-    (rand() % 2) == 0 ? strncpy(mac_type, "Air", 3) : strncpy(mac_type, "Pro", 3);
-
     // print the hostname
-    fprintf(write_location, "%s%ss-Macbook-%s%s\n", format_prefix, get_random_name(), mac_type, format_suffix);
+    fprintf(write_location, "%s%ss-Macbook-%s%s\n", format_prefix, get_random_name(), (rand() % 2) == 0 ? "Air" : "Pro", format_suffix);
 }
 
 // print a hostname like [Name]s-Mac-Mini
@@ -268,11 +260,11 @@ enum EPlatformType set_platform_type(char *type_name) {
     int platform_rng = rand() % 12;
 
     // 33% chance to be macbook
-    if (platform_rng >= 0)
+    if (platform_rng <= 3)
         return MACBOOK;
 
     // 16% chance to be mac mini
-    if (platform_rng >= 4)
+    if (platform_rng <= 5)
         return MACMINI;
 
     // 50% chance to be windows
@@ -292,7 +284,7 @@ int main(int argc, char *argv[]) {
     program_name = argv[0];
 
     // open /dev/urandom for reading
-    random_file = file_prepare("/dev/urandom", true, true);
+    FILE *random_file = file_prepare("/dev/urandom", true, true);
 
     // read bytes from /dev/urandom
     read(fileno(random_file), &random_seed, sizeof(random_seed));
