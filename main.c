@@ -86,7 +86,6 @@ void display_version_message(void) {
     exit(0);
 }
 
-
 // count the lines in a file
 int file_count_lines(FILE *file) {
     // char and line
@@ -333,7 +332,7 @@ int main(int argc, char *argv[]) {
     }
 
     // open the name file if one is provided
-    names_location = (option_names_file) ? file_prepare(option_names_file, true, false) : NULL;
+    names_location = (option_names_file) ? (!(strcmp(option_names_file, "-")) ? stdin : file_prepare(option_names_file, true, false)) : NULL;
 
     // open the chosen file or point to stdout
     write_location = (option_output_file) ? file_prepare(option_output_file, false, false) : stdout;
