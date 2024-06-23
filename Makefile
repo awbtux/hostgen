@@ -38,11 +38,11 @@ NM = $(CROSS)nm
 READELF = $(CROSS)readelf
 
 # gnu options
-CFLAGS = -pipe -Os -ffunction-sections -fdata-sections -fmerge-all-constants -Wall -Wno-unused-variable
+CFLAGS = -pipe -ffunction-sections -fdata-sections -fmerge-all-constants -Wall -Wno-unused-variable
 CPPFLAGS = -D_DEFAULT_SOURCE
-CXXFLAGS = -pipe -Os -g0 -ffunction-sections -fdata-sections -fmerge-all-constants
+CXXFLAGS = -pipe -ffunction-sections -fdata-sections -fmerge-all-constants -Wall -Wno-unused-variable
 LDFLAGS = -Wl,--gc-sections,-s,-z,norelro,-z,now,--hash-style=sysv,--sort-section,alignment
-STRIPFLAGS = -S --strip-unneeded -R .note.gnu.gold-version -R .comment -R .note -R .note.gnu.build-id -R .jcr -R .note.gnu.property -R .note.ABI-tag -R .gnu.version -R .hash -R .gcc_except_table
+STRIPFLAGS = -S --strip-unneeded -R .note.gnu.gold-version -R .comment -R .note -R .note.gnu.build-id -R .jcr -R .note.gnu.property -R .note.ABI-tag -R .gnu.version -R .gcc_except_table
 
 # enable static linking, if defined
 ifeq ($(static_bin),yes)
@@ -54,8 +54,13 @@ endif
 # strip binaries, if defined
 ifeq ($(strip_bin),yes)
 LDFLAGS += -s -Wl,--build-id=none
-CFLAGS += -s -g0
+CFLAGS += -s -Os -g0
+CXXFLAGS += -s -Os -g0
 stripcmd = $(STRIP) $@ $(STRIPFLAGS)
+else
+LDFLAGS += -g
+CFLAGS += -g -Og
+CXXFLAGS += -g -Og
 endif
 
 # stuff
@@ -96,4 +101,4 @@ hostgen: $(SRC) $(OBJ)
 	$(CC) $(LIBS) $(LDFLAGS) $(OBJ) -o $@
 	$(stripcmd)
 
-.PHONY: install-hostgen uninstall-hostgen install-doc uninstall-doc install uninstall dist clean
+.PHONY: all hostgen install-hostgen uninstall-hostgen install-doc uninstall-doc install uninstall dist clean
