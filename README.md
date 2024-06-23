@@ -1,6 +1,5 @@
-## To-do
-- [ ] ameliorate this utter garbage pile of a codebase
-- [ ] -n/--names: read a list of names from stdin if '-' is passed
-- [ ] when -P and -s are set, attempt to substitute the old hostname with the new one in a file, instead of overwriting the whole file
-- [ ] write readme
-- [ ] add hostname templates
+# hostgen
+
+## note
+
+This tool doesn't have much of a reason to exist, since this functionality can be easily implemented in simpler ways (i.e. in a shell script). This was just a little project I was doing in order to familiarize myself with C, and is no longer considered active.
